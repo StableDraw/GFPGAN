@@ -1,6 +1,6 @@
 BasicSR
 facexlib
-git+https://github.com/StableDraw/RestoreFormer
+RestoreFormer @ git+ssh://git@github.com/StableDraw/RestoreFormer@v1.0.0#egg=RestoreFormer
 lmdb
 numpy
 opencv-python
