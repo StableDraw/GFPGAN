@@ -28,7 +28,7 @@ class GFPGANer():
         bg_upsampler (nn.Module): The upsampler for the background. Default: None.
     """
 
-    def __init__(self, model_path = "RestoreFormer/weights", model_name = "RestoreFormer.ckpt", upscale = 2, arch = "clean", channel_multiplier = 2, bg_upsampler = None, device = None, input_is_latent = True):
+    def __init__(self, model_path = "weights/", model_name = "RestoreFormer.ckpt", upscale = 2, arch = "clean", channel_multiplier = 2, bg_upsampler = None, device = None, input_is_latent = True):
         model_full_path = model_path + model_name
         self.upscale = upscale
         self.bg_upsampler = bg_upsampler
@@ -36,9 +36,9 @@ class GFPGANer():
         # initialize model
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if device is None else device
         if model_full_path.startswith("https://"):
-            model_full_path = load_file_from_url(url = model_full_path, model_dir = os.path.join(ROOT_DIR, "gfpgan/weights"), progress = True, file_name = None)
+            model_full_path = load_file_from_url(url = model_full_path, model_dir = os.path.join(ROOT_DIR, model_path), progress = True, file_name = None)
                 # initialize face helper
-        self.face_helper = FaceRestoreHelper(upscale, face_size = 512, crop_ratio = (1, 1), det_model = "retinaface_resnet50", save_ext = "png", use_parse = True, device = self.device, model_rootpath = "gfpgan/weights")
+        self.face_helper = FaceRestoreHelper(upscale, face_size = 512, crop_ratio = (1, 1), det_model = "retinaface_resnet50", save_ext = "png", use_parse = True, device = self.device, model_rootpath = model_path)
 
         # initialize the GFP-GAN
         if arch == "clean":
@@ -54,7 +54,7 @@ class GFPGANer():
                 for mu in model_urls:
                     if mn in mu:
                         mud = mu
-                model_full_path = load_file_from_url(url = mud, model_dir = os.path.join(ROOT_DIR, "gfpgan/weights"), progress = True, file_name = None)
+                model_full_path = load_file_from_url(url = mud, model_dir = os.path.join(ROOT_DIR, model_path), progress = True, file_name = None)
             loadnet = torch.load(model_full_path)
             if "params_ema" in loadnet:
                 keyname = "params_ema"
