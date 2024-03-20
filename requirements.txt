@@ -1,6 +1,6 @@
 BasicSR
 facexlib
-RestoreFormer @ git+ssh://git@github.com/StableDraw/RestoreFormer@v1.0.0#egg=RestoreFormer
+RestoreFormer @ git+https://git@github.com/StableDraw/RestoreFormer.git
 lmdb
 numpy
 opencv-python
@@ -11,6 +11,3 @@ torch>=1.7
 torchvision
 tqdm
 yapf
-tempfile
-tarfile
-requests
