@@ -7,7 +7,7 @@ from facexlib.utils.face_restoration_helper import FaceRestoreHelper
 from torchvision.transforms.functional import normalize
 #from gfpgan.archs.gfpgan_bilinear_arch import GFPGANBilinear
 from .archs.gfpganv1_clean_arch import GFPGANv1Clean
-from restoreformer.models.vqgan_v1 import RestoreFormerModel
+from RestoreFormer.models.vqgan_v1 import RestoreFormerModel
 from .archs.restoreformer_arch import RestoreFormer
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
