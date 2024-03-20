@@ -28,33 +28,34 @@ class GFPGANer():
         bg_upsampler (nn.Module): The upsampler for the background. Default: None.
     """
 
-    def __init__(self, model_path, upscale = 2, arch = "clean", channel_multiplier = 2, bg_upsampler = None, device = None, input_is_latent = True):
+    def __init__(self, model_path = "RestoreFormer/weights", model_name = "RestoreFormer.ckpt", upscale = 2, arch = "clean", channel_multiplier = 2, bg_upsampler = None, device = None, input_is_latent = True):
+        model_full_path = model_path + model_name
         self.upscale = upscale
         self.bg_upsampler = bg_upsampler
 
         # initialize model
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if device is None else device
-        if model_path.startswith("https://"):
-            model_path = load_file_from_url(url = model_path, model_dir = os.path.join(ROOT_DIR, "gfpgan/weights"), progress = True, file_name = None)
+        if model_full_path.startswith("https://"):
+            model_full_path = load_file_from_url(url = model_full_path, model_dir = os.path.join(ROOT_DIR, "gfpgan/weights"), progress = True, file_name = None)
                 # initialize face helper
         self.face_helper = FaceRestoreHelper(upscale, face_size = 512, crop_ratio = (1, 1), det_model = "retinaface_resnet50", save_ext = "png", use_parse = True, device = self.device, model_rootpath = "gfpgan/weights")
 
         # initialize the GFP-GAN
         if arch == "clean":
             self.gfpgan = GFPGANv1Clean(out_size = 512, num_style_feat = 512, channel_multiplier = channel_multiplier, decoder_load_path = None, fix_decoder = False, num_mlp = 8, input_is_latent = input_is_latent, different_w = True, narrow = 1, sft_half = True)
-            if not(os.path.isfile(model_path)):
+            if not(os.path.isfile(model_full_path)):
                 model_urls = [
                     "https://github.com/TencentARC/GFPGAN/releases/download/v0.1.0/GFPGANv1.pth",
                     "https://github.com/TencentARC/GFPGAN/releases/download/v0.2.0/GFPGANCleanv1-NoCE-C2.pth",
                     "https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.3.pth",
                     "https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth"
                     ]
-                mn = model_path[model_path.rfind('/'):]
+                mn = model_full_path[model_full_path.rfind('/'):]
                 for mu in model_urls:
                     if mn in mu:
                         mud = mu
-                model_path = load_file_from_url(url = mud, model_dir = os.path.join(ROOT_DIR, "gfpgan/weights"), progress = True, file_name = None)
-            loadnet = torch.load(model_path)
+                model_full_path = load_file_from_url(url = mud, model_dir = os.path.join(ROOT_DIR, "gfpgan/weights"), progress = True, file_name = None)
+            loadnet = torch.load(model_full_path)
             if "params_ema" in loadnet:
                 keyname = "params_ema"
             else:
@@ -66,19 +67,23 @@ class GFPGANer():
         # elif arch == 'original':
         #     self.gfpgan = GFPGANv1(out_size = 512, num_style_feat = 512, channel_multiplier = channel_multiplier, decoder_load_path = None, fix_decoder = True, num_mlp = 8, input_is_latent = input_is_latent, different_w = True, narrow = 1, sft_half = True)
         elif "RestoreFormer" in arch:
-            if not(os.path.isfile(model_path)):
+            if not(os.path.isfile(model_full_path)):
+                input("Please, download file https://1drv.ms/u/c/307e464889c434ba/EVBGfjLatdtCiRhr0e5Ji-YByFXEdowXTCOEyFnGIXYzdA?e=qiSxx3, unpack RestoreFormer/last.ckpt it to weights/RestoreFormer and rename last.ckpt to RestoreFormer.ckpt and press Enter to continue...")
+                #Todo find open file storage and realize downloading automaticly
+                '''
                 import tempfile, tarfile, requests
-                response = requests.get("https://connecthkuhk-my.sharepoint.com/:u:/g/personal/wzhoux_connect_hku_hk/Eb73S2jXZIxNrrOFRnFKu2MBTe7kl4cMYYwwiudAmDNwYg?e=Xa4ZDf")
+                response = requests.get("https://1drv.ms/u/c/307e464889c434ba/EVBGfjLatdtCiRhr0e5Ji-YByFXEdowXTCOEyFnGIXYzdA?e=qiSxx3")
                 file = tempfile.TemporaryFile()
                 file.write(response.content)
                 if file.endswith("tar.gz"):
                     tar = tarfile.open(file, "r:gz")
                 elif file.endswith("tar"):
                     tar = tarfile.open(file, "r:")
-                tar.extract("RestoreFormer/last.ckpt", "RestoreFormer/weights/RestoreFormer.ckpt")
+                tar.extract("RestoreFormer/last.ckpt", model_full_path)
                 file.close()
                 tar.close()
-            loadnet = torch.load(model_path)
+                '''
+            loadnet = torch.load(model_full_path)
             sd = loadnet["state_dict"]
             keys = list(sd.keys())
             ddconfig = {
@@ -116,7 +121,7 @@ class GFPGANer():
                     "comp_style_weight": 2e3, #2000.0
                     "identity_weight": 3, #1.5
                     "lpips_style_weight": 1e9,
-                    "identity_model_path": "RestoreFormer/weights/pretrained_models/arcface_resnet18.pth"
+                    "identity_model_path": model_path + "pretrained_models/arcface_resnet18.pth"
                 }
             }
             if arch == "RestoreFormer":
